@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -38,14 +38,26 @@ function BookingFormInner() {
   const minDateTime = useMemo(() => {
     const now = new Date();
     now.setSeconds(0, 0);
+    const minutes = now.getMinutes();
+    if (minutes > 0 && minutes <= 30) {
+      now.setMinutes(30);
+    } else if (minutes > 30) {
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+    }
     const pad = (value: number) => value.toString().padStart(2, "0");
     const year = now.getFullYear();
     const month = pad(now.getMonth() + 1);
     const day = pad(now.getDate());
     const hours = pad(now.getHours());
-    const minutes = pad(now.getMinutes());
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    const mins = pad(now.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${mins}`;
   }, []);
+
+  useEffect(() => {
+    setStartTime(minDateTime);
+    setEndTime(minDateTime);
+  }, [minDateTime]);
 
   const availableRoomCodes = useMemo(() => {
     if (!roomType) {
@@ -62,6 +74,57 @@ function BookingFormInner() {
       ROOM_TYPES.find((t) => t.value === roomType)?.label ?? roomType;
     return `${typeLabel} ${roomCode}`;
   }, [roomType, roomCode]);
+
+  const getDateParts = (value: string, fallback: string) => {
+    const base = value || fallback;
+    const date = base.slice(0, 10);
+    const hour = base.slice(11, 13);
+    const minute = base.slice(14, 16);
+    return { date, hour, minute };
+  };
+
+  const updateStartTime = (partial: { date?: string; time?: string }) => {
+    const current = getDateParts(startTime, minDateTime);
+    const date = partial.date ?? current.date;
+    let hour = current.hour;
+    let minute = current.minute;
+    if (partial.time) {
+      hour = partial.time.slice(0, 2);
+      minute = partial.time.slice(3, 5);
+    }
+    if (!date) {
+      setStartTime("");
+      return;
+    }
+    setStartTime(`${date}T${hour}:${minute}`);
+  };
+
+  const updateEndTime = (partial: { date?: string; time?: string }) => {
+    const startParts = getDateParts(startTime, minDateTime);
+    const current = getDateParts(endTime, minDateTime);
+    const date = partial.date ?? startParts.date ?? current.date;
+    let hour = current.hour;
+    let minute = current.minute;
+    if (partial.time) {
+      hour = partial.time.slice(0, 2);
+      minute = partial.time.slice(3, 5);
+    }
+    if (!date) {
+      setEndTime("");
+      return;
+    }
+    setEndTime(`${date}T${hour}:${minute}`);
+  };
+
+  const HALF_HOUR_TIMES = Array.from({ length: 48 }, (_, index) => {
+    const hour = Math.floor(index / 2)
+      .toString()
+      .padStart(2, "0");
+    const minute = index % 2 === 0 ? "00" : "30";
+    return `${hour}:${minute}`;
+  });
+
+  const minDateOnly = minDateTime.slice(0, 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,9 +150,30 @@ function BookingFormInner() {
       return;
     }
 
+    const isHalfHourStep = (value: string) => {
+      const date = new Date(value);
+      const mins = date.getMinutes();
+      return mins === 0 || mins === 30;
+    };
+
+    if (!isHalfHourStep(startTime) || !isHalfHourStep(endTime)) {
+      setError("กรุณาเลือกเวลาเป็นช่วงครึ่งชั่วโมง เช่น 11:00 หรือ 11:30");
+      setSubmitting(false);
+      return;
+    }
+
     const now = new Date();
     const startDate = new Date(startTime);
     const endDate = new Date(endTime);
+
+    const startDateOnly = startDate.toISOString().slice(0, 10);
+    const endDateOnly = endDate.toISOString().slice(0, 10);
+
+    if (startDateOnly !== endDateOnly) {
+      setError("ระบบรองรับการจองได้วันเดียวเท่านั้น");
+      setSubmitting(false);
+      return;
+    }
 
     if (startDate < now || endDate <= now) {
       setError("ไม่สามารถเลือกวันและเวลาที่ย้อนหลังได้");
@@ -287,29 +371,63 @@ function BookingFormInner() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-100">
-              เวลาเริ่มต้น
+              วันที่ประชุม
             </label>
             <input
-              type="datetime-local"
-              min={minDateTime}
-              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              type="date"
+              min={minDateOnly}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+              value={getDateParts(startTime, minDateTime).date}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (!value) {
+                  setStartTime("");
+                  setEndTime("");
+                } else {
+                  updateStartTime({ date: value });
+                  updateEndTime({ date: value });
+                }
+              }}
               required
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-100">
-              เวลาสิ้นสุด
+              เวลาที่เริ่มประชุม
             </label>
-            <input
-              type="datetime-local"
-              min={minDateTime}
-              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-            />
+            <select
+              className="w-32 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+              value={`${getDateParts(startTime, minDateTime).hour}:${getDateParts(
+                startTime,
+                minDateTime,
+              ).minute === "30" ? "30" : "00"}`}
+              onChange={(e) => updateStartTime({ time: e.target.value })}
+            >
+              {HALF_HOUR_TIMES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-100">
+              เวลาสิ้นสุดประชุม
+            </label>
+            <select
+              className="w-32 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+              value={`${getDateParts(endTime, minDateTime).hour}:${getDateParts(
+                endTime,
+                minDateTime,
+              ).minute === "30" ? "30" : "00"}`}
+              onChange={(e) => updateEndTime({ time: e.target.value })}
+            >
+              {HALF_HOUR_TIMES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             type="submit"
