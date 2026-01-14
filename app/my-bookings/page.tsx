@@ -88,13 +88,18 @@ function MyBookingsInner() {
     if (selectedIds.length === 0) {
       return;
     }
+    if (!lineUserId) {
+      setError("ไม่พบ LINE ID ของผู้ใช้");
+      return;
+    }
     setError(null);
     setSuccess(null);
     setConfirming(true);
     const { error: updateError } = await supabase
       .from("booking")
       .update({ status: "cancelled" })
-      .in("id", selectedIds);
+      .in("id", selectedIds)
+      .eq("line_user_id", lineUserId);
     if (updateError) {
       setError("ยกเลิกการจองไม่สำเร็จ");
     } else {
@@ -181,13 +186,13 @@ function MyBookingsInner() {
                 <table className="min-w-full text-left text-sm text-zinc-100">
                   <thead className="bg-zinc-900 text-xs font-medium uppercase text-zinc-400">
                     <tr>
+                      <th className="px-3 py-2 text-center">
+                        {selectionMode ? "เลือก" : ""}
+                      </th>
                       <th className="px-3 py-2">ห้อง</th>
                       <th className="px-3 py-2">เริ่ม</th>
                       <th className="px-3 py-2">สิ้นสุด</th>
                       <th className="px-3 py-2">สถานะ</th>
-                      <th className="px-3 py-2 text-center">
-                        {selectionMode ? "เลือก" : ""}
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -196,6 +201,16 @@ function MyBookingsInner() {
                         key={b.id}
                         className="border-t border-zinc-800 text-xs text-zinc-100"
                       >
+                        <td className="px-3 py-2 text-center">
+                          {selectionMode && b.status !== "cancelled" && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(b.id)}
+                              onChange={() => toggleSelection(b.id)}
+                              className="h-4 w-4 cursor-pointer accent-red-500"
+                            />
+                          )}
+                        </td>
                         <td className="px-3 py-2">{b.room_name}</td>
                         <td className="px-3 py-2">
                           {new Date(b.start_time).toLocaleString("th-TH", {
@@ -217,16 +232,6 @@ function MyBookingsInner() {
                           >
                             {b.status ?? "-"}
                           </span>
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          {selectionMode && b.status !== "cancelled" && (
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(b.id)}
-                              onChange={() => toggleSelection(b.id)}
-                              className="h-4 w-4 cursor-pointer accent-red-500"
-                            />
-                          )}
                         </td>
                       </tr>
                     ))}
