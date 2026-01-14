@@ -88,20 +88,18 @@ function MyBookingsInner() {
     if (selectedIds.length === 0) {
       return;
     }
-    if (!lineUserId) {
-      setError("ไม่พบ LINE ID ของผู้ใช้");
-      return;
-    }
     setError(null);
     setSuccess(null);
     setConfirming(true);
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from("booking")
       .update({ status: "cancelled" })
       .in("id", selectedIds)
-      .eq("line_user_id", lineUserId);
+      .select("id");
     if (updateError) {
       setError("ยกเลิกการจองไม่สำเร็จ");
+    } else if (!data || data.length === 0) {
+      setError("ไม่พบรายการที่จะยกเลิกหรือไม่มีสิทธิ์ยกเลิก");
     } else {
       setSuccess("ยกเลิกการจองเรียบร้อย");
       setSelectionMode(false);
