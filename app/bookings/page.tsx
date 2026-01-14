@@ -109,24 +109,24 @@ function BookingsListInner() {
 
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
-      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-950">
-        <header className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
+        <header className="flex flex-col gap-1 border-b border-zinc-800 pb-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
             ดูสถานะการจองห้องประชุม
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-zinc-300">
             แสดงรายการจองทั้งหมด สามารถรีเฟรชและ Export ข้อมูลเพื่อดูภาพรวมการใช้ห้องได้
           </p>
         </header>
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3 text-zinc-100">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            <h2 className="text-lg font-semibold text-white">
               รายการจองห้องทั้งหมด
             </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={refreshBookings}
-                className="inline-flex items-center rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
               >
                 รีเฟรช
               </button>
@@ -140,20 +140,20 @@ function BookingsListInner() {
             </div>
           </div>
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-400">{error}</p>
           )}
           {loading ? (
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="text-sm text-zinc-300">
               กำลังโหลด...
             </div>
           ) : bookings.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            <div className="rounded-lg border border-dashed border-zinc-700 p-4 text-sm text-zinc-300">
               ยังไม่มีการจอง
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-zinc-100 text-xs font-medium uppercase text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+            <div className="overflow-x-auto rounded-lg border border-zinc-800">
+              <table className="min-w-full text-left text-sm text-zinc-100">
+                <thead className="bg-zinc-900 text-xs font-medium uppercase text-zinc-400">
                   <tr>
                     <th className="px-3 py-2">ห้อง</th>
                     <th className="px-3 py-2">ผู้จอง (ชื่อจาก LINE)</th>
@@ -167,7 +167,7 @@ function BookingsListInner() {
                   {bookings.map((b) => (
                     <tr
                       key={b.id}
-                      className="border-t border-zinc-200 text-xs text-zinc-800 dark:border-zinc-800 dark:text-zinc-200"
+                      className="border-t border-zinc-800 text-xs text-zinc-100"
                     >
                       <td className="px-3 py-2">{b.room_name}</td>
                       <td className="px-3 py-2">

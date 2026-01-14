@@ -35,11 +35,11 @@ export default function LiffBookingPage() {
 
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
-      <main className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-950">
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-xl bg-black p-6 shadow-sm">
+        <h1 className="text-xl font-semibold text-white">
           กำลังโหลดข้อมูลจาก LINE
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-zinc-300">
           กรุณารอสักครู่ ระบบกำลังดึงข้อมูลผู้ใช้จาก LINE เพื่อนำไปใช้ในการจองห้อง
         </p>
       </main>

@@ -35,6 +35,18 @@ function BookingFormInner() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const minDateTime = useMemo(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const pad = (value: number) => value.toString().padStart(2, "0");
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }, []);
+
   const availableRoomCodes = useMemo(() => {
     if (!roomType) {
       return [];
@@ -75,7 +87,17 @@ function BookingFormInner() {
       return;
     }
 
-    if (new Date(startTime) >= new Date(endTime)) {
+    const now = new Date();
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    if (startDate < now || endDate <= now) {
+      setError("ไม่สามารถเลือกวันและเวลาที่ย้อนหลังได้");
+      setSubmitting(false);
+      return;
+    }
+
+    if (startDate >= endDate) {
       setError("เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด");
       setSubmitting(false);
       return;
@@ -145,25 +167,25 @@ function BookingFormInner() {
 
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-950">
-        <header className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
+        <header className="flex flex-col gap-1 border-b border-zinc-800 pb-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
             จองห้องประชุม
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-zinc-300">
             กรอกข้อมูลการจองห้อง แล้วระบบจะบันทึกลง Supabase
           </p>
         </header>
         <form
           onSubmit={handleSubmit}
-          className="grid gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+          className="grid gap-4 rounded-lg border border-zinc-800 p-4"
         >
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               ประเภทห้อง
             </label>
             <select
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={roomType}
               onChange={(e) => {
                 setRoomType(e.target.value);
@@ -180,11 +202,11 @@ function BookingFormInner() {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               ชื่อห้อง
             </label>
             <select
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value)}
               required
@@ -201,68 +223,70 @@ function BookingFormInner() {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               ชื่อผู้จอง
             </label>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50">
+            <div className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50">
               {lineDisplayName || "กรุณาเข้าผ่านลิงก์จาก LINE"}
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               หัวข้อเรื่อง
             </label>
             <input
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               เบอร์โทรผู้จอง
             </label>
             <input
               type="tel"
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={tel}
               onChange={(e) => setTel(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               จำนวนผู้เข้าประชุม
             </label>
             <input
               type="number"
               min={1}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={member}
               onChange={(e) => setMember(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               เวลาเริ่มต้น
             </label>
             <input
               type="datetime-local"
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              min={minDateTime}
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               เวลาสิ้นสุด
             </label>
             <input
               type="datetime-local"
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              min={minDateTime}
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               required
@@ -271,7 +295,7 @@ function BookingFormInner() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 inline-flex items-center justify-center rounded-md border border-[#003951] bg-white px-4 py-2 text-sm font-medium text-[#003951] transition hover:bg-[#003951] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 inline-flex items-center justify-center rounded-md border border-zinc-700 bg-[#003951] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#002b3b] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึกการจอง"}
           </button>

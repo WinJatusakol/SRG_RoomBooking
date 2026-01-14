@@ -127,18 +127,18 @@ export default function CancelBookingPage() {
 
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
-      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-950">
-        <header className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
+        <header className="flex flex-col gap-1 border-b border-zinc-800 pb-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
             ยกเลิกการจองห้องประชุม
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-zinc-300">
             เลือกการจองที่ต้องการยกเลิก จากนั้นกรอกเบอร์โทรที่ใช้จองเพื่อยืนยัน
           </p>
         </header>
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3 text-zinc-100">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            <h2 className="text-lg font-semibold text-white">
               รายการจองห้องทั้งหมด
             </h2>
             <button
@@ -160,31 +160,31 @@ export default function CancelBookingPage() {
 
                 refreshBookings();
               }}
-              className="inline-flex items-center rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+              className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
             >
               รีเฟรช
             </button>
           </div>
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-400">{error}</p>
           )}
           {success && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">
+            <p className="text-sm text-emerald-400">
               {success}
             </p>
           )}
           {loading ? (
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="text-sm text-zinc-300">
               กำลังโหลด...
             </div>
           ) : bookings.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            <div className="rounded-lg border border-dashed border-zinc-700 p-4 text-sm text-zinc-300">
               ยังไม่มีการจอง
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-zinc-100 text-xs font-medium uppercase text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+            <div className="overflow-x-auto rounded-lg border border-zinc-800">
+              <table className="min-w-full text-left text-sm text-zinc-100">
+                <thead className="bg-zinc-900 text-xs font-medium uppercase text-zinc-400">
                   <tr>
                     <th className="px-3 py-2">ห้อง</th>
                     <th className="px-3 py-2">ผู้จอง (ชื่อจาก LINE)</th>
@@ -198,7 +198,7 @@ export default function CancelBookingPage() {
                   {bookings.map((b) => (
                     <tr
                       key={b.id}
-                      className="border-t border-zinc-200 text-xs text-zinc-800 dark:border-zinc-800 dark:text-zinc-200"
+                      className="border-t border-zinc-800 text-xs text-zinc-100"
                     >
                       <td className="px-3 py-2">{b.room_name}</td>
                       <td className="px-3 py-2">
@@ -214,8 +214,8 @@ export default function CancelBookingPage() {
                         <span
                           className={
                             b.status === "cancelled"
-                              ? "rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/40 dark:text-red-200"
-                              : "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+                              ? "rounded-full bg-red-900/40 px-2 py-0.5 text-[10px] font-medium text-red-200"
+                              : "rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-medium text-emerald-200"
                           }
                         >
                           {b.status ?? "-"}
@@ -239,18 +239,18 @@ export default function CancelBookingPage() {
           )}
         </section>
         {selectedBooking && (
-          <section className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          <section className="flex flex-col gap-3 rounded-lg border border-zinc-800 p-4 text-zinc-100">
+            <h2 className="text-base font-semibold text-white">
               ยกเลิกการจองห้อง {selectedBooking.room_name}
             </h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="text-xs text-zinc-400">
               กรุณากรอกเบอร์โทรที่ใช้ในการจอง เพื่อยืนยันการยกเลิก
             </p>
-            <label className="text-sm text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm text-zinc-100">
               เบอร์โทรที่ใช้จอง
             </label>
             <input
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={tel}
               onChange={(e) => setTel(e.target.value)}
             />
