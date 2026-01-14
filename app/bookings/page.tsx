@@ -12,6 +12,7 @@ type Booking = {
   user_name: string;
   member: number;
   status: string | null;
+  create_time: string | null;
 };
 
 const supabase = createClient();
@@ -64,19 +65,31 @@ function BookingsListInner() {
     }
 
     const header = [
+      "ID",
       "ห้อง",
       "ผู้จอง",
-      "เวลาเริ่ม",
-      "เวลาสิ้นสุด",
+      "เวลาเริ่ม (เวลาไทย)",
+      "เวลาสิ้นสุด (เวลาไทย)",
+      "เวลาที่กดจอง (เวลาไทย)",
       "จำนวนผู้เข้าประชุม",
       "สถานะ",
     ];
 
     const rows = bookings.map((b) => [
+      b.id ?? "",
       b.room_name ?? "",
       b.user_name ?? "",
-      new Date(b.start_time).toLocaleString("th-TH"),
-      new Date(b.end_time).toLocaleString("th-TH"),
+      new Date(b.start_time).toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok",
+      }),
+      new Date(b.end_time).toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok",
+      }),
+      b.create_time
+        ? new Date(b.create_time).toLocaleString("th-TH", {
+            timeZone: "Asia/Bangkok",
+          })
+        : "",
       b.member ?? "",
       b.status ?? "",
     ]);
@@ -174,10 +187,14 @@ function BookingsListInner() {
                         {b.user_name || "—"}
                       </td>
                       <td className="px-3 py-2">
-                        {new Date(b.start_time).toLocaleString()}
+                        {new Date(b.start_time).toLocaleString("th-TH", {
+                          timeZone: "Asia/Bangkok",
+                        })}
                       </td>
                       <td className="px-3 py-2">
-                        {new Date(b.end_time).toLocaleString()}
+                        {new Date(b.end_time).toLocaleString("th-TH", {
+                          timeZone: "Asia/Bangkok",
+                        })}
                       </td>
                       <td className="px-3 py-2">{b.member}</td>
                       <td className="px-3 py-2">

@@ -117,13 +117,19 @@ function BookingFormInner() {
       return;
     }
 
+    const toUtcIsoString = (value: string) => new Date(value).toISOString();
+
+    const startTimeUtc = toUtcIsoString(startTime);
+    const endTimeUtc = toUtcIsoString(endTime);
+    const createTimeUtc = new Date().toISOString();
+
     const { data: conflicts, error: conflictError } = await supabase
       .from("booking")
       .select("id")
       .eq("room_name", selectedRoomLabel)
       .neq("status", "cancelled")
-      .lt("start_time", endTime)
-      .gt("end_time", startTime);
+      .lt("start_time", endTimeUtc)
+      .gt("end_time", startTimeUtc);
 
     if (conflictError) {
       setError("ตรวจสอบสถานะห้องไม่สำเร็จ");
@@ -142,11 +148,12 @@ function BookingFormInner() {
       user_name: lineDisplayName || null,
       subject: subject,
       tel: telNumber,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: startTimeUtc,
+      end_time: endTimeUtc,
       member: memberNumber,
       status: "booked",
       line_user_id: lineUserId,
+      create_time: createTimeUtc,
     });
 
     if (insertError) {

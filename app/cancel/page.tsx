@@ -205,10 +205,14 @@ export default function CancelBookingPage() {
                         {b.user_name || "—"}
                       </td>
                       <td className="px-3 py-2">
-                        {new Date(b.start_time).toLocaleString()}
+                        {new Date(b.start_time).toLocaleString("th-TH", {
+                          timeZone: "Asia/Bangkok",
+                        })}
                       </td>
                       <td className="px-3 py-2">
-                        {new Date(b.end_time).toLocaleString()}
+                        {new Date(b.end_time).toLocaleString("th-TH", {
+                          timeZone: "Asia/Bangkok",
+                        })}
                       </td>
                       <td className="px-3 py-2">
                         <span
