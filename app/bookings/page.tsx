@@ -17,6 +17,23 @@ type Booking = {
 
 const supabase = createClient();
 
+const ROOM_TYPES: { label: string; value: string }[] = [
+  { label: "Meeting Room", value: "meeting" },
+  { label: "Online Meeting", value: "online" },
+  { label: "Live Room", value: "live" },
+];
+
+const ROOM_NAMES_BY_TYPE: Record<string, string[]> = {
+  live: ["1", "2", "3"],
+  meeting: ["A", "B", "C"],
+  online: ["A", "B", "C"],
+};
+
+const ALL_ROOM_NAMES: string[] = ROOM_TYPES.flatMap((type) => {
+  const codes = ROOM_NAMES_BY_TYPE[type.value] ?? [];
+  return codes.map((code) => `${type.label} ${code}`);
+});
+
 function BookingsListInner() {
   const searchParams = useSearchParams();
   const lineUserId = searchParams.get("line_user_id");
@@ -25,6 +42,13 @@ function BookingsListInner() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -60,6 +84,18 @@ function BookingsListInner() {
     }
     setLoading(false);
   };
+
+  const bookingsForSelectedDate = bookings.filter((b) => {
+    if (!selectedDate) {
+      return true;
+    }
+    const localDate = new Date(b.start_time).toLocaleDateString("en-CA", {
+      timeZone: "Asia/Bangkok",
+    });
+    return localDate === selectedDate;
+  });
+
+  const roomNames = ALL_ROOM_NAMES;
 
   const handleExport = async () => {
     if (bookings.length === 0) {
@@ -125,6 +161,13 @@ function BookingsListInner() {
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
+        <div className="flex justify-center">
+          <img
+            src="/logo.png"
+            alt="Sustain Republix"
+            className="h-20 w-auto"
+          />
+        </div>
         <header className="flex flex-col gap-1 border-b border-zinc-800 pb-4">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             ดูสถานะการจองห้องประชุม
@@ -134,11 +177,22 @@ function BookingsListInner() {
           </p>
         </header>
         <section className="flex flex-col gap-3 text-zinc-100">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-white">
-              รายการจองห้องทั้งหมด
-            </h2>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col">
+              <h2 className="text-lg font-semibold text-white">
+                ตารางการใช้ห้องประชุมตามวัน
+              </h2>
+              <span className="text-xs text-zinc-400">
+                เลือกวันที่เพื่อดูว่าห้องแต่ละห้องถูกจองช่วงเวลาใดบ้าง
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+              />
               <button
                 onClick={refreshBookings}
                 className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
@@ -166,54 +220,66 @@ function BookingsListInner() {
               ยังไม่มีการจอง
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-800">
-              <table className="min-w-full text-left text-sm text-zinc-100">
-                <thead className="bg-zinc-900 text-xs font-medium uppercase text-zinc-400">
-                  <tr>
-                    <th className="px-3 py-2">ห้อง</th>
-                    <th className="px-3 py-2">ผู้จอง (ชื่อจาก LINE)</th>
-                    <th className="px-3 py-2">เริ่ม</th>
-                    <th className="px-3 py-2">สิ้นสุด</th>
-                    <th className="px-3 py-2">จำนวนผู้เข้าประชุม</th>
-                    <th className="px-3 py-2">สถานะ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((b) => (
-                    <tr
-                      key={b.id}
-                      className="border-t border-zinc-800 text-xs text-zinc-100"
-                    >
-                      <td className="px-3 py-2">{b.room_name}</td>
-                      <td className="px-3 py-2">
-                        {b.user_name || "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {new Date(b.start_time).toLocaleString("th-TH", {
-                          timeZone: "Asia/Bangkok",
+            <div className="grid gap-3">
+              {roomNames.map((room) => {
+                const roomBookings = bookingsForSelectedDate.filter(
+                  (b) => b.room_name === room
+                );
+                return (
+                  <div
+                    key={room}
+                    className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-white">
+                        {room}
+                      </h3>
+                    </div>
+                    {roomBookings.length === 0 ? (
+                      <p className="text-xs text-zinc-400">
+                        ว่างตลอดทั้งวัน
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {roomBookings.map((b) => {
+                          const startLabel = new Date(
+                            b.start_time
+                          ).toLocaleTimeString("th-TH", {
+                            timeZone: "Asia/Bangkok",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          });
+                          const endLabel = new Date(
+                            b.end_time
+                          ).toLocaleTimeString("th-TH", {
+                            timeZone: "Asia/Bangkok",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          });
+                          return (
+                            <div
+                              key={b.id}
+                              className="flex flex-col gap-1 rounded-md bg-emerald-600 px-3 py-2 text-xs text-white sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {startLabel} - {endLabel}
+                                </span>
+                                <span className="text-[11px] text-emerald-100">
+                                  {b.user_name || "ไม่ระบุชื่อ"} (
+                                  {b.member} คน)
+                                </span>
+                              </div>
+                            </div>
+                          );
                         })}
-                      </td>
-                      <td className="px-3 py-2">
-                        {new Date(b.end_time).toLocaleString("th-TH", {
-                          timeZone: "Asia/Bangkok",
-                        })}
-                      </td>
-                      <td className="px-3 py-2">{b.member}</td>
-                      <td className="px-3 py-2">
-                        <span
-                          className={
-                            b.status === "cancelled"
-                              ? "rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/40 dark:text-red-200"
-                              : "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-                          }
-                        >
-                          {b.status ?? "-"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

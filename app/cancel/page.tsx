@@ -128,6 +128,13 @@ export default function CancelBookingPage() {
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
+        <div className="flex justify-center">
+          <img
+            src="/logo.png"
+            alt="Sustain Republix"
+            className="h-20 w-auto"
+          />
+        </div>
         <header className="flex flex-col gap-1 border-b border-zinc-800 pb-4">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             ยกเลิกการจองห้องประชุม

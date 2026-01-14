@@ -36,6 +36,13 @@ export default function LiffMyBookingsPage() {
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
       <main className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-xl bg-black p-6 shadow-sm">
+        <div className="flex justify-center">
+          <img
+            src="/logo.png"
+            alt="Sustain Republix"
+            className="h-16 w-auto"
+          />
+        </div>
         <h1 className="text-xl font-semibold text-white">
           กำลังโหลดข้อมูลจาก LINE
         </h1>
