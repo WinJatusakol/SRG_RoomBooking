@@ -41,6 +41,7 @@ function MyBookingsInner() {
         .from("booking")
         .select("*")
         .eq("line_user_id", lineUserId)
+        .order("status", { ascending: true })
         .order("start_time", { ascending: true });
       if (queryError) {
         setError("โหลดข้อมูลการจองไม่สำเร็จ");
@@ -62,6 +63,7 @@ function MyBookingsInner() {
       .from("booking")
       .select("*")
       .eq("line_user_id", lineUserId)
+      .order("status", { ascending: true })
       .order("start_time", { ascending: true });
     if (queryError) {
       setError("โหลดข้อมูลการจองไม่สำเร็จ");

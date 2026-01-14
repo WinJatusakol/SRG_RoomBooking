@@ -33,6 +33,7 @@ function BookingsListInner() {
       const { data, error: queryError } = await supabase
         .from("booking")
         .select("*")
+        .eq("status", "booked")
         .order("start_time", { ascending: true });
       if (queryError) {
         setError("โหลดข้อมูลการจองไม่สำเร็จ");
@@ -50,6 +51,7 @@ function BookingsListInner() {
     const { data, error: queryError } = await supabase
       .from("booking")
       .select("*")
+      .eq("status", "booked")
       .order("start_time", { ascending: true });
     if (queryError) {
       setError("โหลดข้อมูลการจองไม่สำเร็จ");
