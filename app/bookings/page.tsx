@@ -190,7 +190,10 @@ function BookingsListInner() {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={async (e) => {
+                  setSelectedDate(e.target.value);
+                  await refreshBookings();
+                }}
                 className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               />
               <button
