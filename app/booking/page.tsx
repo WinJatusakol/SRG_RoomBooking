@@ -254,9 +254,11 @@ function BookingFormInner() {
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={tel}
-              onChange={(e) => setTel(e.target.value)}
+              onChange={(e) => setTel(e.target.value.replace(/\D/g, ""))}
               required
             />
           </div>
@@ -269,7 +271,10 @@ function BookingFormInner() {
               min={1}
               className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               value={member}
-              onChange={(e) => setMember(e.target.value)}
+              onChange={(e) => {
+                const onlyDigits = e.target.value.replace(/\D/g, "");
+                setMember(onlyDigits);
+              }}
               required
             />
           </div>

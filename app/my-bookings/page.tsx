@@ -88,6 +88,10 @@ function MyBookingsInner() {
     if (selectedIds.length === 0) {
       return;
     }
+    if (!lineUserId) {
+      setError("ไม่พบ LINE ID ของผู้ใช้");
+      return;
+    }
     setError(null);
     setSuccess(null);
     setConfirming(true);
@@ -95,6 +99,7 @@ function MyBookingsInner() {
       .from("booking")
       .update({ status: "cancelled" })
       .in("id", selectedIds)
+      .eq("line_user_id", lineUserId)
       .select("id");
     if (updateError) {
       setError("ยกเลิกการจองไม่สำเร็จ");
