@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,7 +19,7 @@ const ROOM_NAMES_BY_TYPE: Record<string, string[]> = {
   online: ["A", "B", "C"],
 };
 
-export default function BookingFormPage() {
+function BookingFormInner() {
   const searchParams = useSearchParams();
   const lineUserId = searchParams.get("line_user_id");
   const lineDisplayName = searchParams.get("line_display_name") ?? "";
@@ -286,5 +286,13 @@ export default function BookingFormPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function BookingFormPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#003951] py-10 px-4 font-sans" />}>
+      <BookingFormInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,7 +16,7 @@ type Booking = {
 
 const supabase = createClient();
 
-export default function BookingsListPage() {
+function BookingsListInner() {
   const searchParams = useSearchParams();
   const lineUserId = searchParams.get("line_user_id");
   const lineDisplayName = searchParams.get("line_display_name");
@@ -200,5 +200,13 @@ export default function BookingsListPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function BookingsListPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#003951] py-10 px-4 font-sans" />}>
+      <BookingsListInner />
+    </Suspense>
   );
 }
