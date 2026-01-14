@@ -271,7 +271,7 @@ function BookingFormInner() {
             จองห้องประชุม
           </h1>
           <p className="text-sm text-zinc-300">
-            กรอกข้อมูลการจองห้อง แล้วระบบจะบันทึกลง Supabase
+            กรอกข้อมูลการจองห้อง
           </p>
         </header>
         <form

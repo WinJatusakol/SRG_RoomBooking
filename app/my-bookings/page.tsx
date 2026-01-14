@@ -145,9 +145,6 @@ function MyBookingsInner() {
                 <h2 className="text-lg font-semibold text-white">
                   รายการจองของ {displayNameParam || "ผู้ใช้ LINE"}
                 </h2>
-                <span className="text-xs text-zinc-400">
-                  ถ้าเข้าผ่าน LINE LIFF ระบบจะใช้ LINE ID ของคุณในการค้นหาและยกเลิกการจอง
-                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
