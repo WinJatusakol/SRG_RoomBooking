@@ -421,7 +421,12 @@ function BookingFormInner() {
               ชื่อผู้จอง
             </label>
             <div className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50">
-              {lineDisplayName || "กรุณาเข้าผ่านลิงก์จาก LINE"}
+              <div>
+                {lineDisplayName || "กรุณาเข้าผ่านลิงก์จาก LINE"}
+              </div>
+              <div className="mt-1 text-xs text-zinc-400">
+                ID ของคุณ: {lineUserId || "-"}
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-1">
