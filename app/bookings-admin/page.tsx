@@ -139,6 +139,7 @@ function BookingsAdminInner() {
       const { data: bookingRows, error: bookingError } = await supabase
         .from("booking")
         .select("*")
+        .eq("status", "booked")
         .order("start_time", { ascending: true });
 
       if (bookingError) {
@@ -200,6 +201,7 @@ function BookingsAdminInner() {
     const { data: bookingRows, error: bookingError } = await supabase
       .from("booking")
       .select("*")
+      .eq("status", "booked")
       .order("start_time", { ascending: true });
 
     if (bookingError) {
