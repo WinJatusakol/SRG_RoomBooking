@@ -55,6 +55,9 @@ function BookingsAdminInner() {
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] =
     useState<BookingWithAttendees | null>(null);
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [newAdminId, setNewAdminId] = useState("");
+  const [newAdminName, setNewAdminName] = useState("");
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
@@ -405,6 +408,19 @@ function BookingsAdminInner() {
               >
                 Export to Excel
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewAdminId("");
+                  setNewAdminName("");
+                  setShowAddAdmin(true);
+                  setSuccess(null);
+                  setError(null);
+                }}
+                className="inline-flex items-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900/60"
+              >
+                เพิ่มแอดมิน
+              </button>
             </div>
           </div>
           {error && (
@@ -625,6 +641,81 @@ function BookingsAdminInner() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showAddAdmin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-950 p-5 text-sm text-zinc-100">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold text-white">
+                เพิ่มแอดมินใหม่
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowAddAdmin(false)}
+                className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-100 hover:bg-zinc-900"
+              >
+                ปิด
+              </button>
+            </div>
+            <div className="mb-2 text-xs text-zinc-400">
+              กรอก LINE User ID (ค่าที่แสดงในหน้าแบบฟอร์มจองว่า &quot;ID ของคุณ&quot;)
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-400">
+                  LINE User ID
+                </span>
+                <input
+                  className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+                  placeholder="เช่น Uxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  value={newAdminId}
+                  onChange={(e) => setNewAdminId(e.target.value.trim())}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-400">
+                  ชื่อสำหรับแสดง (ไม่บังคับ)
+                </span>
+                <input
+                  className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+                  placeholder="เช่น ชื่อเล่นหรือชื่อจริงของแอดมิน"
+                  value={newAdminName}
+                  onChange={(e) => setNewAdminName(e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const id = newAdminId.trim();
+                  if (!id) {
+                    setError("กรุณากรอก LINE User ID");
+                    return;
+                  }
+                  setLoading(true);
+                  setError(null);
+                  setSuccess(null);
+                  const { error: insertError } = await supabase
+                    .from("booking_admins")
+                    .insert({
+                      line_user_id: id,
+                      display_name: newAdminName.trim() || null,
+                      is_active: true,
+                    });
+                  setLoading(false);
+                  if (insertError) {
+                    setError("เพิ่มแอดมินไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+                    return;
+                  }
+                  setSuccess("เพิ่มแอดมินเรียบร้อย");
+                  setShowAddAdmin(false);
+                }}
+                className="mt-2 inline-flex items-center justify-center rounded-md border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+              >
+                เพิ่มแอดมิน
+              </button>
             </div>
           </div>
         </div>
