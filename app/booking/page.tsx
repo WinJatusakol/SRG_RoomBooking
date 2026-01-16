@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
 
+type AttendeeForm = {
+  fullName: string;
+  position: string;
+  department: string;
+};
+
 const ROOM_TYPES: { label: string; value: string }[] = [
   { label: "Meeting Room", value: "meeting" },
   { label: "Online Meeting", value: "online" },
@@ -31,6 +37,21 @@ function BookingFormInner() {
   const [member, setMember] = useState<string>("1");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [food, setFood] = useState({
+    break: false,
+    breakfast: false,
+    lunch: false,
+    dinner: false,
+  });
+  const [tools, setTools] = useState({
+    led: false,
+    ledCount: "",
+    notebook: false,
+    notebookCount: "",
+  });
+  const [attendees, setAttendees] = useState<AttendeeForm[]>([
+    { fullName: "", position: "", department: "" },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -201,6 +222,40 @@ function BookingFormInner() {
       return;
     }
 
+    const foodPayload = {
+      break: food.break,
+      breakfast: food.breakfast,
+      lunch: food.lunch,
+      dinner: food.dinner,
+    };
+
+    const ledCountNumber = tools.led
+      ? Number(tools.ledCount || "0")
+      : 0;
+    const notebookCountNumber = tools.notebook
+      ? Number(tools.notebookCount || "0")
+      : 0;
+
+    if (tools.led && (Number.isNaN(ledCountNumber) || ledCountNumber <= 0)) {
+      setError("กรุณากรอกจำนวนจอ LED ให้ถูกต้อง");
+      setSubmitting(false);
+      return;
+    }
+
+    if (
+      tools.notebook &&
+      (Number.isNaN(notebookCountNumber) || notebookCountNumber <= 0)
+    ) {
+      setError("กรุณากรอกจำนวน Notebook ให้ถูกต้อง");
+      setSubmitting(false);
+      return;
+    }
+
+    const toolsPayload = {
+      led: ledCountNumber,
+      notebook: notebookCountNumber,
+    };
+
     const toUtcIsoString = (value: string) => new Date(value).toISOString();
 
     const startTimeUtc = toUtcIsoString(startTime);
@@ -227,31 +282,72 @@ function BookingFormInner() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("booking").insert({
-      room_name: selectedRoomLabel,
-      user_name: lineDisplayName || null,
-      subject: subject,
-      tel: telNumber,
-      start_time: startTimeUtc,
-      end_time: endTimeUtc,
-      member: memberNumber,
-      status: "booked",
-      line_user_id: lineUserId,
-      create_time: createTimeUtc,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("booking")
+      .insert({
+        room_name: selectedRoomLabel,
+        user_name: lineDisplayName || null,
+        subject: subject,
+        tel: telNumber,
+        start_time: startTimeUtc,
+        end_time: endTimeUtc,
+        member: memberNumber,
+        status: "booked",
+        line_user_id: lineUserId,
+        create_time: createTimeUtc,
+        food: foodPayload,
+        tools: toolsPayload,
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
+    if (insertError || !inserted) {
       setError("บันทึกการจองไม่สำเร็จ");
-    } else {
-      setSuccess("บันทึกการจองเรียบร้อย");
-      setRoomType("");
-      setRoomCode("");
-      setSubject("");
-      setTel("");
-      setMember("1");
-      setStartTime("");
-      setEndTime("");
+      setSubmitting(false);
+      return;
     }
+
+    const attendeesPayload = attendees
+      .map((a) => ({
+        booking_id: inserted.id,
+        full_name: a.fullName.trim(),
+        position: a.position.trim() || null,
+        department: a.department.trim() || null,
+      }))
+      .filter((a) => a.full_name !== "");
+
+    if (attendeesPayload.length > 0) {
+      const { error: attendeesError } = await supabase
+        .from("meeting_attendees")
+        .insert(attendeesPayload);
+      if (attendeesError) {
+        setError("บันทึกผู้เข้าประชุมไม่สำเร็จ แต่ได้บันทึกการจองแล้ว");
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    setSuccess("บันทึกการจองเรียบร้อย");
+    setRoomType("");
+    setRoomCode("");
+    setSubject("");
+    setTel("");
+    setMember("1");
+    setStartTime("");
+    setEndTime("");
+    setFood({
+      break: false,
+      breakfast: false,
+      lunch: false,
+      dinner: false,
+    });
+    setTools({
+      led: false,
+      ledCount: "",
+      notebook: false,
+      notebookCount: "",
+    });
+    setAttendees([{ fullName: "", position: "", department: "" }]);
 
     setSubmitting(false);
   };
@@ -365,9 +461,225 @@ function BookingFormInner() {
               onChange={(e) => {
                 const onlyDigits = e.target.value.replace(/\D/g, "");
                 setMember(onlyDigits);
+                const count = Number(onlyDigits || "0");
+                if (count <= 0) {
+                  setAttendees([{ fullName: "", position: "", department: "" }]);
+                  return;
+                }
+                setAttendees((prev) => {
+                  if (count === prev.length) {
+                    return prev;
+                  }
+                  if (count < prev.length) {
+                    return prev.slice(0, count);
+                  }
+                  const extra = Array.from(
+                    { length: count - prev.length },
+                    () => ({ fullName: "", position: "", department: "" }),
+                  );
+                  return [...prev, ...extra];
+                });
               }}
               required
             />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-100">
+              รายชื่อผู้เข้าประชุม
+            </label>
+            <p className="text-xs text-zinc-400">
+              ช่องกรอกจะมีจำนวนเท่ากับจำนวนผู้เข้าประชุมด้านบน
+            </p>
+            <div className="mt-2 flex flex-col gap-3">
+              {attendees.map((attendee, index) => (
+                <div
+                  key={index}
+                  className="grid gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 p-3 md:grid-cols-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-zinc-400">
+                      คนที่ {index + 1}
+                    </span>
+                    <input
+                      className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+                      placeholder="ชื่อ-นามสกุล"
+                      value={attendee.fullName}
+                      onChange={(e) =>
+                        setAttendees((prev) => {
+                          const next = [...prev];
+                          next[index] = {
+                            ...next[index],
+                            fullName: e.target.value,
+                          };
+                          return next;
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-zinc-400">
+                      ตำแหน่ง
+                    </span>
+                    <input
+                      className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+                      value={attendee.position}
+                      onChange={(e) =>
+                        setAttendees((prev) => {
+                          const next = [...prev];
+                          next[index] = {
+                            ...next[index],
+                            position: e.target.value,
+                          };
+                          return next;
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-zinc-400">
+                      หน่วยงาน
+                    </span>
+                    <input
+                      className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
+                      value={attendee.department}
+                      onChange={(e) =>
+                        setAttendees((prev) => {
+                          const next = [...prev];
+                          next[index] = {
+                            ...next[index],
+                            department: e.target.value,
+                          };
+                          return next;
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-100">
+              อาหารที่ต้องการ
+            </label>
+            <div className="flex flex-wrap gap-3 text-sm text-zinc-100">
+              <label className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 accent-emerald-500"
+                  checked={food.break}
+                  onChange={(e) =>
+                    setFood((prev) => ({ ...prev, break: e.target.checked }))
+                  }
+                />
+                <span>Break</span>
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 accent-emerald-500"
+                  checked={food.breakfast}
+                  onChange={(e) =>
+                    setFood((prev) => ({
+                      ...prev,
+                      breakfast: e.target.checked,
+                    }))
+                  }
+                />
+                <span>อาหารเช้า</span>
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 accent-emerald-500"
+                  checked={food.lunch}
+                  onChange={(e) =>
+                    setFood((prev) => ({ ...prev, lunch: e.target.checked }))
+                  }
+                />
+                <span>อาหารกลางวัน</span>
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 accent-emerald-500"
+                  checked={food.dinner}
+                  onChange={(e) =>
+                    setFood((prev) => ({ ...prev, dinner: e.target.checked }))
+                  }
+                />
+                <span>อาหารเย็น</span>
+              </label>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-100">
+              อุปกรณ์ที่ต้องการ
+            </label>
+            <div className="flex flex-col gap-2 text-sm text-zinc-100">
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 accent-emerald-500"
+                    checked={tools.led}
+                    onChange={(e) =>
+                      setTools((prev) => ({
+                        ...prev,
+                        led: e.target.checked,
+                        ledCount: e.target.checked ? prev.ledCount : "",
+                      }))
+                    }
+                  />
+                  <span>จอ LED</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="จำนวน"
+                  className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400 disabled:opacity-60"
+                  value={tools.ledCount}
+                  onChange={(e) =>
+                    setTools((prev) => ({
+                      ...prev,
+                      ledCount: e.target.value.replace(/\D/g, ""),
+                    }))
+                  }
+                  disabled={!tools.led}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 accent-emerald-500"
+                    checked={tools.notebook}
+                    onChange={(e) =>
+                      setTools((prev) => ({
+                        ...prev,
+                        notebook: e.target.checked,
+                        notebookCount: e.target.checked ? prev.notebookCount : "",
+                      }))
+                    }
+                  />
+                  <span>Notebook</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="จำนวน"
+                  className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400 disabled:opacity-60"
+                  value={tools.notebookCount}
+                  onChange={(e) =>
+                    setTools((prev) => ({
+                      ...prev,
+                      notebookCount: e.target.value.replace(/\D/g, ""),
+                    }))
+                  }
+                  disabled={!tools.notebook}
+                />
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-100">

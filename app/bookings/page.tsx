@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Booking = {
@@ -35,10 +34,6 @@ const ALL_ROOM_NAMES: string[] = ROOM_TYPES.flatMap((type) => {
 });
 
 function BookingsListInner() {
-  const searchParams = useSearchParams();
-  const lineUserId = searchParams.get("line_user_id");
-  const lineDisplayName = searchParams.get("line_display_name");
-
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,67 +92,6 @@ function BookingsListInner() {
 
   const roomNames = ALL_ROOM_NAMES;
 
-  const handleExport = async () => {
-    if (bookings.length === 0) {
-      return;
-    }
-
-    const header = [
-      "ID",
-      "ห้อง",
-      "ผู้จอง",
-      "เวลาเริ่ม (เวลาไทย)",
-      "เวลาสิ้นสุด (เวลาไทย)",
-      "เวลาที่กดจอง (เวลาไทย)",
-      "จำนวนผู้เข้าประชุม",
-      "สถานะ",
-    ];
-
-    const rows = bookings.map((b) => [
-      b.id ?? "",
-      b.room_name ?? "",
-      b.user_name ?? "",
-      new Date(b.start_time).toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok",
-      }),
-      new Date(b.end_time).toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok",
-      }),
-      b.create_time
-        ? new Date(b.create_time).toLocaleString("th-TH", {
-            timeZone: "Asia/Bangkok",
-          })
-        : "",
-      b.member ?? "",
-      b.status ?? "",
-    ]);
-
-    const escapeCell = (value: string) =>
-      `"${value.replace(/"/g, '""')}"`;
-
-    const csvContent = [header, ...rows]
-      .map((row) => row.map((cell) => escapeCell(String(cell))).join(","))
-      .join("\r\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    const today = new Date().toISOString().slice(0, 10);
-    link.download = `bookings-${today}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    await supabase.from("export_logs").insert({
-      line_user_id: lineUserId,
-      line_display_name: lineDisplayName,
-      source: "bookings_page",
-      exported_date: today,
-    });
-  };
-
   return (
     <div className="min-h-screen bg-[#003951] py-10 px-4 font-sans">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-xl bg-black p-6 shadow-sm">
@@ -201,13 +135,6 @@ function BookingsListInner() {
                 className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
               >
                 รีเฟรช
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={bookings.length === 0}
-                className="inline-flex items-center rounded-md border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Export to Excel
               </button>
             </div>
           </div>
