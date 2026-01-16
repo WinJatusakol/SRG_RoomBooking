@@ -390,8 +390,9 @@ function BookingsAdminInner() {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => {
+                onChange={async (e) => {
                   setSelectedDate(e.target.value);
+                  await refreshBookings();
                 }}
                 className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-400"
               />
@@ -493,7 +494,7 @@ function BookingsAdminInner() {
 
       {selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-2xl rounded-lg border border-zinc-700 bg-zinc-950 p-5 text-sm text-zinc-100">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 p-5 text-sm text-zinc-100">
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-white">
                 ข้อมูลการประชุม
